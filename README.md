@@ -2,15 +2,15 @@
 
 A small Zotero plugin for creating one Markdown note per paper.
 
-`zotero-md-note` creates a local `.md` note for the selected Zotero item. The note filename is based on the item's first PDF attachment filename, and the note includes links back to the Zotero item and Zotero PDF.
+`zotero-md-note` creates a local `.md` note for the selected Zotero item. The note filename is based on Zotero item metadata, and the note includes links back to the Zotero item and, when available, its Zotero PDF.
 
 Repository: <https://github.com/haiyankong/zotero-md-note>
 
 ## Features
 
 - Create a Markdown note from the currently selected Zotero item.
-- Use the PDF attachment filename as the Markdown filename.
-- Add a Zotero item link and a Zotero PDF link to the note.
+- Use Zotero metadata to create a stable Markdown filename.
+- Add a Zotero item link and, when available, a Zotero PDF link to the note.
 - Ask for the note saving folder each time.
 - Skip existing Markdown files by default.
 
@@ -37,16 +37,28 @@ The plugin creates one Markdown file per selected Zotero item.
 
 ## Note Filename
 
-The Markdown filename is based on the first PDF attachment filename:
+The Markdown filename is based on Zotero item metadata:
 
 ```text
-PDF filename without extension.md
+year_first-author_title.md
 ```
 
-For example:
+For items with more than two authors, the filename uses `first-author-et-al`:
 
 ```text
-2026_guo-et-al_acute-stress-impacts-executive-social-function.md
+2026_guo-et-al_acute-stress-impacts-executive-social-function-eviden.md
+```
+
+The naming rule is:
+
+```text
+{{ year suffix="_" }}
+{{ if {{ authorsCount > 2 }} }}
+{{ authors max="1" name="family" join="_" suffix="-et-al_" case="hyphen" }}
+{{ else }}
+{{ authors max="1" name="family" join="_" suffix="_" case="hyphen" }}
+{{ endif }}
+{{ title truncate="60" case="hyphen" }}
 ```
 
 ## Generated Template
@@ -68,10 +80,12 @@ Full citation
 ## Points for Writing
 ```
 
+The PDF link is omitted when the item has no PDF attachment.
+
 ## Behavior
 
 - Existing `.md` files are not overwritten.
-- If a selected item has no PDF attachment, the plugin reports an error for that item.
+- If a selected item has no PDF attachment, the plugin still creates a note and omits the PDF link.
 - The plugin does not modify Zotero items, PDFs, annotations, or notes.
 
 ## Development

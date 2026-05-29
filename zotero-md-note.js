@@ -1,6 +1,6 @@
 ZoteroMDNote = {
   pluginID: "zotero-md-note@example.com",
-  version: "0.1.6",
+  version: "0.1.7",
   rootURI: "",
   addedElementIDs: [],
   addedPopupListenerIDs: [],
@@ -11,7 +11,7 @@ ZoteroMDNote = {
 {{FULL_CITATION}}
 
 - [Open Zotero item](zotero://select/library/items/{{ZOTERO_ITEM_KEY}})
-- [Open Zotero PDF](zotero://open-pdf/library/items/{{ZOTERO_PDF_KEY}})
+{{ZOTERO_PDF_LINK}}
 
 ## Highlights
 
@@ -305,11 +305,66 @@ ZoteroMDNote = {
       pdfAttachment = await this.findPdfAttachment(item);
     }
 
-    if (!pdfAttachment) {
-      throw new Error(`No PDF attachment found for: ${item.getField("title") || item.key}`);
+    return { item, pdfAttachment };
+  },
+
+  yearPart(item) {
+    const date = String(item.getField("date") || "");
+    const match = date.match(/\b(1[5-9]\d{2}|20\d{2}|21\d{2})\b/);
+    return match ? match[0] : "no-year";
+  },
+
+  authorCreators(item) {
+    let creators = [];
+    try {
+      creators = item.getCreators() || [];
+    } catch (e) {
+      return [];
     }
 
-    return { item, pdfAttachment };
+    const authors = creators.filter((creator) => {
+      try {
+        return Zotero.CreatorTypes.getName(creator.creatorTypeID) === "author";
+      } catch (e) {
+        return false;
+      }
+    });
+
+    return authors.length ? authors : creators;
+  },
+
+  creatorFamilyName(creator) {
+    return String(creator?.lastName || creator?.fieldMode && creator?.name || "").trim();
+  },
+
+  hyphenCase(text) {
+    return String(text || "")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^\p{L}\p{N}]+/gu, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-+/g, "-")
+      .toLowerCase();
+  },
+
+  truncateSlug(slug, maxLength) {
+    const value = String(slug || "");
+    if (value.length <= maxLength) {
+      return value;
+    }
+    return value.slice(0, maxLength).replace(/-+$/g, "");
+  },
+
+  noteFileStem(item) {
+    const year = this.yearPart(item);
+    const creators = this.authorCreators(item);
+    const firstFamily = this.hyphenCase(this.creatorFamilyName(creators[0]));
+    const authorPart = firstFamily
+      ? `${firstFamily}${creators.length > 2 ? "-et-al_" : "_"}`
+      : "";
+    const title = this.truncateSlug(this.hyphenCase(item.getField("title") || "untitled"), 60) || "untitled";
+
+    return `${year}_${authorPart}${title}`;
   },
 
   zoteroLibraryPath(zoteroItem) {
@@ -361,7 +416,9 @@ ZoteroMDNote = {
       values.ZOTERO_PDF_URI
     );
 
-    return output.trimEnd() + "\n";
+    return output
+      .replace(/\n{3,}/g, "\n\n")
+      .trimEnd() + "\n";
   },
 
   async createNotesForItems(win, selectedItems) {
@@ -397,9 +454,9 @@ ZoteroMDNote = {
         }
         seenItemIDs.add(item.id);
 
-        const pdfFilename = await this.attachmentFilename(pdfAttachment);
-        const pdfStem = this.sanitizeFileName(this.stripExtension(pdfFilename));
-        const notePath = this.joinPath(notesDir, `${pdfStem}.md`);
+        const pdfFilename = pdfAttachment ? await this.attachmentFilename(pdfAttachment) : "";
+        const noteStem = this.sanitizeFileName(this.noteFileStem(item));
+        const notePath = this.joinPath(notesDir, `${noteStem}.md`);
 
         if (!this.overwriteExisting && await IOUtils.exists(notePath)) {
           results.push(`Already exists, skipped: ${notePath}`);
@@ -407,14 +464,17 @@ ZoteroMDNote = {
         }
 
         const values = {
-          PAPER_TITLE: item.getField("title") || pdfStem,
+          PAPER_TITLE: item.getField("title") || noteStem,
           FULL_CITATION: this.getFullCitation(item),
           PDF_FILENAME: pdfFilename,
-          PDF_FILENAME_WITHOUT_EXTENSION: pdfStem,
+          PDF_FILENAME_WITHOUT_EXTENSION: pdfFilename ? this.stripExtension(pdfFilename) : "",
           ZOTERO_ITEM_KEY: item.key,
-          ZOTERO_PDF_KEY: pdfAttachment.key,
+          ZOTERO_PDF_KEY: pdfAttachment ? pdfAttachment.key : "",
           ZOTERO_ITEM_URI: this.zoteroSelectURI(item),
-          ZOTERO_PDF_URI: this.zoteroOpenPdfURI(pdfAttachment),
+          ZOTERO_PDF_URI: pdfAttachment ? this.zoteroOpenPdfURI(pdfAttachment) : "",
+          ZOTERO_PDF_LINK: pdfAttachment
+            ? `- [Open Zotero PDF](${this.zoteroOpenPdfURI(pdfAttachment)})`
+            : "",
         };
 
         const markdown = this.fillTemplate(values);
