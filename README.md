@@ -58,8 +58,10 @@ The naming rule is:
 {{ else }}
 {{ authors max="1" name="family" join="_" suffix="_" case="hyphen" }}
 {{ endif }}
-{{ title truncate="60" case="hyphen" }}
+{{ title truncate="50" case="hyphen" }}
 ```
+
+The title is converted to hyphen case and truncated to at most 50 characters, preferably at a word boundary.
 
 ## Generated Template
 

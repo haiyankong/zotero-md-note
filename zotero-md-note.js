@@ -1,6 +1,6 @@
 ZoteroMDNote = {
   pluginID: "zotero-md-note@example.com",
-  version: "0.1.7",
+  version: "0.1.8",
   rootURI: "",
   addedElementIDs: [],
   addedPopupListenerIDs: [],
@@ -352,7 +352,15 @@ ZoteroMDNote = {
     if (value.length <= maxLength) {
       return value;
     }
-    return value.slice(0, maxLength).replace(/-+$/g, "");
+
+    const hardCut = value.slice(0, maxLength).replace(/-+$/g, "");
+    const lastHyphen = hardCut.lastIndexOf("-");
+
+    if (lastHyphen > 0) {
+      return hardCut.slice(0, lastHyphen).replace(/-+$/g, "");
+    }
+
+    return hardCut;
   },
 
   noteFileStem(item) {
@@ -362,7 +370,7 @@ ZoteroMDNote = {
     const authorPart = firstFamily
       ? `${firstFamily}${creators.length > 2 ? "-et-al_" : "_"}`
       : "";
-    const title = this.truncateSlug(this.hyphenCase(item.getField("title") || "untitled"), 60) || "untitled";
+    const title = this.truncateSlug(this.hyphenCase(item.getField("title") || "untitled"), 50) || "untitled";
 
     return `${year}_${authorPart}${title}`;
   },

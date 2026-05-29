@@ -3,8 +3,8 @@
     "zotero-md-note@example.com": {
       "updates": [
         {
-          "version": "0.1.7",
-          "update_link": "https://github.com/haiyankong/zotero-md-note/releases/download/v0.1.7/zotero-md-note.xpi",
+          "version": "0.1.8",
+          "update_link": "https://github.com/haiyankong/zotero-md-note/releases/download/v0.1.8/zotero-md-note.xpi",
           "applications": {
             "zotero": {
               "strict_min_version": "8.0-beta.21",

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "zotero-md-note",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Create a Markdown note for the selected Zotero item using its PDF filename.",
   "author": "haiyankong",
   "homepage_url": "https://github.com/haiyankong/zotero-md-note",
