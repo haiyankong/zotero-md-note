@@ -76,10 +76,6 @@ Full citation
 ## Highlights
 
 ## Notes
-
-## Quotes
-
-## Points for Writing
 ```
 
 The PDF link is omitted when the item has no PDF attachment.
