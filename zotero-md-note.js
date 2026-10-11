@@ -1,6 +1,6 @@
 ZoteroMDNote = {
   pluginID: "zotero-md-note@example.com",
-  version: "0.1.9",
+  version: "0.2.0",
   rootURI: "",
   addedElementIDs: [],
   addedPopupListenerIDs: [],

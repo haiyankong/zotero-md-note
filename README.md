@@ -16,7 +16,7 @@ Repository: <https://github.com/haiyankong/zotero-md-note>
 
 ## Compatibility
 
-Tested with Zotero 9.0.4 on Windows.
+Compatible with Zotero 8 and later. Tested with Zotero 9.0.4 on Windows; updated for Zotero 10.0.x.
 
 ## Install
 
